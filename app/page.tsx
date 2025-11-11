@@ -3,7 +3,9 @@
 import { useState } from "react"
 import { BottomNav } from "@/components/bottom-nav"
 import { WelcomeScreen } from "@/components/welcome-screen"
+import { TravelCalendar } from "@/components/travel-calendar"
 import { StampGallery } from "@/components/stamp-gallery"
+import { AppHeader } from "@/components/app-header"
 
 export default function Home() {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null)
@@ -24,7 +26,9 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-background pb-20">
+      <AppHeader />
       <div className="mx-auto max-w-md">
+        <TravelCalendar />
         <StampGallery />
       </div>
       <BottomNav currentPage="home" />

@@ -1,6 +1,6 @@
 "use client"
 
-import { User, Award, Gift, MapPin, Calendar, Settings, ImageIcon } from "lucide-react"
+import { User, Gift, Calendar, ImageIcon } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -31,12 +31,6 @@ const userRewards = [
   },
 ]
 
-const achievements = [
-  { name: "첫 발걸음", description: "첫 스탬프 획득", unlocked: true },
-  { name: "책 탐험가", description: "10개 스탬프 수집", unlocked: true },
-  { name: "출판단지 마스터", description: "모든 스탬프 수집", unlocked: false },
-]
-
 const uploadedPhotos = [
   { id: 1, src: "/bookstore-alley.jpg", location: "지혜의숲", date: "2025.01.15" },
   { id: 2, src: "/publishing-culture.jpg", location: "아시아출판문화정보센터", date: "2025.01.18" },
@@ -49,12 +43,7 @@ const uploadedPhotos = [
 export function UserProfile() {
   return (
     <div className="space-y-4 p-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-balance text-3xl font-bold text-foreground">프로필</h1>
-        <Button variant="ghost" size="icon">
-          <Settings className="h-5 w-5" />
-        </Button>
-      </div>
+      <h1 className="text-balance text-3xl font-bold text-foreground">프로필</h1>
 
       <Card className="p-6">
         <div className="flex items-center gap-4">
@@ -67,9 +56,6 @@ export function UserProfile() {
           <div className="flex-1">
             <h2 className="text-xl font-bold text-foreground">김독서</h2>
             <p className="text-sm text-muted-foreground">book.lover@email.com</p>
-            <Badge variant="secondary" className="mt-2 bg-primary/20 text-primary">
-              레벨 3 탐험가
-            </Badge>
           </div>
         </div>
       </Card>
@@ -114,27 +100,6 @@ export function UserProfile() {
 
       <Card className="p-6">
         <div className="mb-4 flex items-center gap-2">
-          <MapPin className="h-5 w-5 text-primary" />
-          <h3 className="font-semibold text-foreground">방문 통계</h3>
-        </div>
-        <div className="grid grid-cols-3 gap-4 text-center">
-          <div>
-            <p className="text-2xl font-bold text-foreground">12</p>
-            <p className="text-sm text-muted-foreground">방문 장소</p>
-          </div>
-          <div>
-            <p className="text-2xl font-bold text-foreground">8</p>
-            <p className="text-sm text-muted-foreground">이번 달</p>
-          </div>
-          <div>
-            <p className="text-2xl font-bold text-foreground">45</p>
-            <p className="text-sm text-muted-foreground">총 거리(km)</p>
-          </div>
-        </div>
-      </Card>
-
-      <Card className="p-6">
-        <div className="mb-4 flex items-center gap-2">
           <Gift className="h-5 w-5 text-primary" />
           <h3 className="font-semibold text-foreground">받은 보상</h3>
         </div>
@@ -157,36 +122,6 @@ export function UserProfile() {
               <Badge variant={reward.status === "사용 가능" ? "default" : "secondary"} className="shrink-0">
                 {reward.status}
               </Badge>
-            </div>
-          ))}
-        </div>
-      </Card>
-
-      <Card className="p-6">
-        <div className="mb-4 flex items-center gap-2">
-          <Award className="h-5 w-5 text-primary" />
-          <h3 className="font-semibold text-foreground">업적</h3>
-        </div>
-        <div className="space-y-3">
-          {achievements.map((achievement, index) => (
-            <div
-              key={index}
-              className={`flex items-center gap-3 rounded-lg border p-3 ${
-                achievement.unlocked ? "border-primary/50 bg-primary/5" : "border-border bg-muted/30"
-              }`}
-            >
-              <Award className={`h-6 w-6 ${achievement.unlocked ? "text-primary" : "text-muted-foreground"}`} />
-              <div className="flex-1">
-                <p className={`font-medium ${achievement.unlocked ? "text-foreground" : "text-muted-foreground"}`}>
-                  {achievement.name}
-                </p>
-                <p className="text-sm text-muted-foreground">{achievement.description}</p>
-              </div>
-              {achievement.unlocked && (
-                <Badge variant="secondary" className="bg-primary/20 text-primary">
-                  달성
-                </Badge>
-              )}
             </div>
           ))}
         </div>
