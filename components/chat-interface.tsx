@@ -11,6 +11,8 @@ import {
   uploadImage, 
   clearSession, 
   generateSessionId,
+  getGreeting,
+  getStamps,
   type ChatImageResponse 
 } from "@/lib/chatbot-api"
 import { Alert, AlertDescription } from "@/components/ui/alert"
@@ -27,17 +29,8 @@ interface Message {
   }
 }
 
-const initialMessages: Message[] = [
-  {
-    id: 1,
-    sender: "bot",
-    text: "안녕하세요! 파주 북시티 가이드 북이에요.\n\n텍스트 입력이나 이미지 업로드를 통해 원하시는 장소의 정보를 안내받을 수 있습니다.\n\n또한 출판단지에서 예정된 다양한 행사 일정도 함께 확인하실 수 있습니다.\n\n1. 텍스트 질문: 메시지를 입력해주세요\n2. 이미지 업로드: 카메라 또는 갤러리 버튼을 눌러주세요\n\n궁금한 점이 있으시면 언제든 물어보세요!",
-    time: new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" }),
-  },
-]
-
 export function ChatInterface() {
-  const [messages, setMessages] = useState<Message[]>(initialMessages)
+  const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [sessionId, setSessionId] = useState<string>("")
@@ -48,22 +41,100 @@ export function ChatInterface() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const imageInputRef = useRef<HTMLInputElement>(null)
 
-  // 세션 ID 초기화
-  useEffect(() => {
-    const storedSessionId = localStorage.getItem("chatbot_session_id")
-    if (storedSessionId) {
-      setSessionId(storedSessionId)
-    } else {
-      const newSessionId = generateSessionId()
-      setSessionId(newSessionId)
-      localStorage.setItem("chatbot_session_id", newSessionId)
+  // localStorage에서 메시지 불러오기
+  const loadMessagesFromStorage = (sessionId: string): Message[] => {
+    if (typeof window === 'undefined') return []
+    try {
+      const stored = localStorage.getItem(`chat_messages_${sessionId}`)
+      if (stored) {
+        const parsed = JSON.parse(stored)
+        // imageData의 imageUrl이 base64인 경우 그대로 유지
+        return parsed.map((msg: any) => ({
+          ...msg,
+          imageData: msg.imageData || undefined,
+        }))
+      }
+    } catch (error) {
+      console.error("Failed to load messages from storage:", error)
     }
+    return []
+  }
+
+  // localStorage에 메시지 저장
+  const saveMessagesToStorage = (sessionId: string, messages: Message[]) => {
+    if (typeof window === 'undefined') return
+    try {
+      // imageData의 imageUrl이 base64인 경우 그대로 저장
+      localStorage.setItem(`chat_messages_${sessionId}`, JSON.stringify(messages))
+    } catch (error) {
+      console.error("Failed to save messages to storage:", error)
+    }
+  }
+
+  // 세션 ID 초기화 및 메시지 불러오기
+  useEffect(() => {
+    const initializeChat = async () => {
+      // 세션 ID 설정
+      const storedSessionId = localStorage.getItem("chatbot_session_id")
+      let currentSessionId: string
+      
+      if (storedSessionId) {
+        currentSessionId = storedSessionId
+        setSessionId(storedSessionId)
+      } else {
+        currentSessionId = generateSessionId()
+        setSessionId(currentSessionId)
+        localStorage.setItem("chatbot_session_id", currentSessionId)
+      }
+
+      // 저장된 메시지 불러오기
+      const savedMessages = loadMessagesFromStorage(currentSessionId)
+      
+      if (savedMessages.length > 0) {
+        // 저장된 메시지가 있으면 불러오기
+        setMessages(savedMessages)
+      } else {
+        // 저장된 메시지가 없으면 인삿말 가져오기
+        try {
+          const greetingData = await getGreeting()
+          const greetingMessage: Message = {
+            id: Date.now(),
+            sender: "bot",
+            text: greetingData.greeting,
+            time: getCurrentTime(),
+          }
+          setMessages([greetingMessage])
+          // 인삿말도 저장
+          saveMessagesToStorage(currentSessionId, [greetingMessage])
+        } catch (err) {
+          // 인삿말 로드 실패 시 기본 메시지 사용
+          console.error("Failed to load greeting:", err)
+          const defaultMessage: Message = {
+            id: Date.now(),
+            sender: "bot",
+            text: "안녕하세요! 파주 챗봇입니다. 무엇을 도와드릴까요?",
+            time: getCurrentTime(),
+          }
+          setMessages([defaultMessage])
+          saveMessagesToStorage(currentSessionId, [defaultMessage])
+        }
+      }
+    }
+
+    initializeChat()
   }, [])
 
   // 자동 스크롤
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages])
+
+  // 메시지가 변경될 때마다 localStorage에 저장
+  useEffect(() => {
+    if (sessionId && messages.length > 0) {
+      saveMessagesToStorage(sessionId, messages)
+    }
+  }, [messages, sessionId])
 
   // 에러 자동 제거
   useEffect(() => {
@@ -90,27 +161,81 @@ export function ChatInterface() {
   }
 
   const handleSend = async () => {
-    if (!input.trim() || isLoading) return
+    // 이미지와 텍스트가 모두 없으면 전송 불가
+    if ((!input.trim() && !selectedFile) || isLoading) return
     
     setError(null)
-    const userMessage = input
-    setInput("")
+    const userMessage = input.trim()
+    const hasImage = !!selectedFile
+    const hasText = !!userMessage
     
-    // 사용자 메시지 추가
-    addMessage("user", userMessage)
+    // 사용자 메시지 추가 (이미지와 텍스트 모두 포함)
+    if (hasImage && hasText) {
+      addMessage("user", userMessage, {
+        place: "",
+        confidence: 0,
+        imageUrl: imagePreview || "",
+      })
+    } else if (hasImage) {
+      addMessage("user", "이미지를 업로드했습니다.", {
+        place: "",
+        confidence: 0,
+        imageUrl: imagePreview || "",
+      })
+    } else {
+      addMessage("user", userMessage)
+    }
     
     // 로딩 시작
     setIsLoading(true)
     
     try {
-      const response = await sendTextMessage(userMessage, sessionId)
-      addMessage("bot", response.response)
+      // 이미지가 있으면 먼저 이미지 업로드
+      if (hasImage && selectedFile) {
+        const imageResponse = await uploadImage(selectedFile, sessionId, 'stamp')
+        
+        let botMessage = `📍 **장소**: ${imageResponse.predicted_place}\n\n${imageResponse.description}`
+        
+        if (imageResponse.stamp_added) {
+          botMessage += "\n\n✅ 스탬프가 추가되었습니다!"
+        }
+        
+        // 텍스트도 있으면 텍스트 메시지도 전송
+        if (hasText) {
+          try {
+            const textResponse = await sendTextMessage(userMessage, sessionId)
+            botMessage += `\n\n💬 **질문에 대한 답변**:\n${textResponse.response}`
+          } catch (textErr) {
+            console.error("텍스트 메시지 전송 실패:", textErr)
+            // 텍스트 전송 실패해도 이미지 응답은 표시
+          }
+        }
+        
+        // 이미지 URL 우선 사용 (서버에서 반환된 URL이 있으면 사용, 없으면 미리보기 사용)
+        const imageUrl = imageResponse.image_url || imagePreview || ""
+        
+        addMessage("bot", botMessage, {
+          place: imageResponse.predicted_place,
+          confidence: 100,
+          imageUrl: imageUrl,
+        })
+      } else if (hasText) {
+        // 텍스트만 있는 경우
+        const response = await sendTextMessage(userMessage, sessionId)
+        addMessage("bot", response.response)
+      }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "알 수 없는 오류가 발생했습니다."
       setError(errorMessage)
-      addMessage("bot", "죄송합니다. 응답을 생성하는 중 오류가 발생했습니다. 다시 시도해주세요.")
+      addMessage("bot", "죄송합니다. 메시지 전송 중 오류가 발생했습니다. 다시 시도해주세요.")
     } finally {
       setIsLoading(false)
+      // 전송 후 입력 필드 초기화
+      setInput("")
+      setImagePreview(null)
+      setSelectedFile(null)
+      if (fileInputRef.current) fileInputRef.current.value = ""
+      if (imageInputRef.current) imageInputRef.current.value = ""
     }
   }
 
@@ -126,37 +251,8 @@ export function ChatInterface() {
     }
   }
 
-  const handleImageUpload = async () => {
-    if (!selectedFile || isLoading) return
-    
-    setError(null)
-    setIsLoading(true)
-    
-    // 이미지 미리보기를 사용자 메시지로 추가
-    addMessage("user", "이미지를 업로드했습니다.")
-    
-    try {
-      const response = await uploadImage(selectedFile, sessionId)
-      
-      const botMessage = `📍 **장소**: ${response.predicted_place}\n🎯 **신뢰도**: ${response.confidence.toFixed(1)}%\n\n${response.response}`
-      
-      addMessage("bot", botMessage, {
-        place: response.predicted_place,
-        confidence: response.confidence,
-        imageUrl: imagePreview || "",
-      })
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "알 수 없는 오류가 발생했습니다."
-      setError(errorMessage)
-      addMessage("bot", "죄송합니다. 이미지 인식 중 오류가 발생했습니다. 다시 시도해주세요.")
-    } finally {
-      setIsLoading(false)
-      setImagePreview(null)
-      setSelectedFile(null)
-      if (fileInputRef.current) fileInputRef.current.value = ""
-      if (imageInputRef.current) imageInputRef.current.value = ""
-    }
-  }
+  // handleImageUpload는 이제 handleSend로 통합됨
+  // 이미지 전송 버튼은 handleSend를 호출하도록 변경
 
   const handleClearSession = async () => {
     if (isLoading) return
@@ -169,12 +265,39 @@ export function ChatInterface() {
     
     try {
       await clearSession(sessionId)
-      setMessages(initialMessages)
+      
+      // 기존 세션의 메시지 삭제
+      if (sessionId) {
+        localStorage.removeItem(`chat_messages_${sessionId}`)
+      }
       
       // 새로운 세션 ID 생성
       const newSessionId = generateSessionId()
       setSessionId(newSessionId)
       localStorage.setItem("chatbot_session_id", newSessionId)
+      
+      // 인삿말 다시 가져오기
+      try {
+        const greetingData = await getGreeting()
+        const greetingMessage: Message = {
+          id: Date.now(),
+          sender: "bot",
+          text: greetingData.greeting,
+          time: getCurrentTime(),
+        }
+        setMessages([greetingMessage])
+        saveMessagesToStorage(newSessionId, [greetingMessage])
+      } catch {
+        // 인삿말 로드 실패 시 기본 메시지
+        const defaultMessage: Message = {
+          id: Date.now(),
+          sender: "bot",
+          text: "안녕하세요! 파주 챗봇입니다. 무엇을 도와드릴까요?",
+          time: getCurrentTime(),
+        }
+        setMessages([defaultMessage])
+        saveMessagesToStorage(newSessionId, [defaultMessage])
+      }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "알 수 없는 오류가 발생했습니다."
       setError(errorMessage)
@@ -290,34 +413,34 @@ export function ChatInterface() {
       {/* 이미지 미리보기 */}
       {imagePreview && (
         <div className="border-t border-border bg-card p-4">
-          <div className="relative inline-block">
-            <img
-              src={imagePreview}
-              alt="미리보기"
-              className="h-32 w-32 rounded-lg object-cover"
-            />
-            <Button
-              variant="destructive"
-              size="icon"
-              className="absolute -right-2 -top-2 h-6 w-6 rounded-full"
-              onClick={() => {
-                setImagePreview(null)
-                setSelectedFile(null)
-                if (fileInputRef.current) fileInputRef.current.value = ""
-                if (imageInputRef.current) imageInputRef.current.value = ""
-              }}
-            >
-              <X className="h-4 w-4" />
-            </Button>
+          <div className="flex items-start gap-3">
+            <div className="relative">
+              <img
+                src={imagePreview}
+                alt="미리보기"
+                className="h-24 w-24 rounded-lg object-cover"
+              />
+              <Button
+                variant="destructive"
+                size="icon"
+                className="absolute -right-2 -top-2 h-6 w-6 rounded-full"
+                onClick={() => {
+                  setImagePreview(null)
+                  setSelectedFile(null)
+                  if (fileInputRef.current) fileInputRef.current.value = ""
+                  if (imageInputRef.current) imageInputRef.current.value = ""
+                }}
+                disabled={isLoading}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="flex-1">
+              <p className="text-xs text-muted-foreground mb-2">
+                이미지가 선택되었습니다. 텍스트를 입력하고 전송 버튼을 눌러주세요.
+              </p>
+            </div>
           </div>
-          <Button
-            onClick={handleImageUpload}
-            disabled={isLoading}
-            className="ml-2"
-            size="sm"
-          >
-            이미지 전송
-          </Button>
         </div>
       )}
 
@@ -363,7 +486,7 @@ export function ChatInterface() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
-            placeholder="메시지를 입력하세요..."
+            placeholder={selectedFile ? "이미지와 함께 메시지를 입력하세요..." : "메시지를 입력하세요..."}
             className="flex-1"
             disabled={isLoading}
           />
@@ -371,7 +494,7 @@ export function ChatInterface() {
             onClick={handleSend}
             size="icon"
             className="shrink-0"
-            disabled={isLoading || !input.trim()}
+            disabled={isLoading || (!input.trim() && !selectedFile)}
           >
             <Send className="h-5 w-5" />
           </Button>

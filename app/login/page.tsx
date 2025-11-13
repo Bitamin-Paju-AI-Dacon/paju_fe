@@ -8,19 +8,35 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { BookOpen, ArrowLeft } from "lucide-react"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { BookOpen, ArrowLeft, AlertCircle, Loader2 } from "lucide-react"
 import Link from "next/link"
+import { login } from "@/lib/auth-api"
 
 export default function LoginPage() {
   const router = useRouter()
-  const [email, setEmail] = useState("")
+  const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    localStorage.setItem("isLoggedIn", "true")
-    localStorage.setItem("userEmail", email)
-    router.push("/")
+    setError(null)
+    setIsLoading(true)
+
+    try {
+      const response = await login({ username, password })
+      
+      // 로그인 성공 시 메인 페이지로 이동 (토큰은 login 함수에서 자동 저장됨)
+      localStorage.setItem("isLoggedIn", "true")
+      router.push("/")
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "로그인에 실패했습니다."
+      setError(errorMessage)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -41,15 +57,23 @@ export default function LoginPage() {
           </div>
         </div>
 
+        {error && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+
         <form onSubmit={handleLogin} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email">이메일</Label>
+            <Label htmlFor="username">사용자명</Label>
             <Input
-              id="email"
-              type="email"
-              placeholder="example@email.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              id="username"
+              type="text"
+              placeholder="testuser"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              disabled={isLoading}
               required
             />
           </div>
@@ -62,12 +86,21 @@ export default function LoginPage() {
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              disabled={isLoading}
               required
+              minLength={6}
             />
           </div>
 
-          <Button type="submit" className="w-full h-11" size="lg">
-            로그인
+          <Button type="submit" className="w-full h-11" size="lg" disabled={isLoading}>
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                로그인 중...
+              </>
+            ) : (
+              "로그인"
+            )}
           </Button>
         </form>
 

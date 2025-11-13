@@ -1,25 +1,28 @@
 "use client"
 
-import { MapPin, Navigation, Bookmark, Search } from "lucide-react"
+import { MapPin, Navigation, Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { useState } from "react"
 import { Map, MapMarker, useKakaoLoader } from "react-kakao-maps-sdk"
 
-// 파주 출판단지 주요 스탬프 수집 장소 (실제 좌표)
-const stampLocations = [
-  { id: 1, name: "지혜의숲", lat: 37.7435, lng: 126.6920, collected: true, category: "서점" },
-  { id: 2, name: "아시아출판문화정보센터", lat: 37.7405, lng: 126.6975, collected: true, category: "문화시설" },
-  { id: 3, name: "활판공방", lat: 37.7380, lng: 126.6900, collected: false, category: "체험" },
-  { id: 4, name: "파주출판도시 갤러리", lat: 37.7450, lng: 126.7000, collected: false, category: "갤러리" },
-  { id: 5, name: "북소리", lat: 37.7360, lng: 126.6948, collected: true, category: "서점" },
-  { id: 6, name: "출판도시문화재단", lat: 37.7420, lng: 126.6880, collected: false, category: "문화시설" },
-  { id: 7, name: "열화당책박물관", lat: 37.7460, lng: 126.6955, collected: false, category: "박물관" },
-  { id: 8, name: "파주출판단지 카페거리", lat: 37.7340, lng: 126.6970, collected: false, category: "카페" },
+// 파주 출판단지 관광지 목록 (좌표)
+const touristLocations = [
+  { id: 1, name: "파주출판도시 Sbg파주사옥", lat: 37.7420, lng: 126.6920, category: "사옥" },
+  { id: 2, name: "milkbook", lat: 37.7410, lng: 126.6930, category: "서점" },
+  { id: 3, name: "김영사 사서점", lat: 37.7400, lng: 126.6940, category: "서점" },
+  { id: 4, name: "문학동네", lat: 37.7390, lng: 126.6950, category: "출판사" },
+  { id: 5, name: "출판단지 북카페눈", lat: 37.7380, lng: 126.6960, category: "카페" },
+  { id: 6, name: "열화당", lat: 37.7370, lng: 126.6970, category: "서점" },
+  { id: 7, name: "출판단지 은하수 출판사", lat: 37.7360, lng: 126.6980, category: "출판사" },
+  { id: 8, name: "출판단지 음악세계", lat: 37.7350, lng: 126.6990, category: "음악" },
+  { id: 9, name: "출판단지 지혜의숲", lat: 37.7435, lng: 126.6920, category: "서점" },
+  { id: 10, name: "출판단지 어린이집", lat: 37.7340, lng: 126.7000, category: "시설" },
+  { id: 11, name: "파인드아웃", lat: 37.7330, lng: 126.7010, category: "서점" },
 ]
 
-const categories = ["전체", "서점", "문화시설", "체험", "갤러리", "박물관", "카페"]
+const categories = ["전체", "서점", "출판사", "카페", "사옥", "음악", "시설"]
 
 export function PajuMap() {
   const [selectedCategory, setSelectedCategory] = useState("전체")
@@ -49,13 +52,13 @@ export function PajuMap() {
     console.log("4. 브라우저 Network 탭에서 dapi.kakao.com 요청 확인")
   }
 
-  const filteredLocations = stampLocations.filter((loc) => {
+  const filteredLocations = touristLocations.filter((loc) => {
     const matchesCategory = selectedCategory === "전체" || loc.category === selectedCategory
     const matchesSearch = loc.name.toLowerCase().includes(searchQuery.toLowerCase())
     return matchesCategory && matchesSearch
   })
 
-  const selectedLocationData = stampLocations.find((loc) => loc.id === selectedLocation)
+  const selectedLocationData = touristLocations.find((loc) => loc.id === selectedLocation)
 
   // API 키가 없을 때
   if (!apiKey) {
@@ -70,7 +73,7 @@ export function PajuMap() {
     )
   }
 
-  // 로딩 중이거나 에러가 있을 때
+  // 로딩 중일 때
   if (loading) {
     return (
       <div className="flex h-full w-full items-center justify-center">
@@ -144,12 +147,6 @@ export function PajuMap() {
             key={location.id}
             position={{ lat: location.lat, lng: location.lng }}
             onClick={() => setSelectedLocation(location.id)}
-            image={{
-              src: location.collected 
-                ? "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iIzAwN2JmZiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTIgMkM4LjEzIDIgNSA1LjEzIDUgOWMwIDUuMjUgNyAxMyA3IDEzczctNy43NSA3LTEzYzAtMy44Ny0zLjEzLTctNy03em0wIDkuNWMtMS4zOCAwLTIuNS0xLjEyLTIuNS0yLjVzMS4xMi0yLjUgMi41LTIuNSAyLjUgMS4xMiAyLjUgMi41LTEuMTIgMi41LTIuNSAyLjV6Ii8+PC9zdmc+"
-                : "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iIzk5OTk5OSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTIgMkM4LjEzIDIgNSA1LjEzIDUgOWMwIDUuMjUgNyAxMyA3IDEzczctNy43NSA3LTEzYzAtMy44Ny0zLjEzLTctNy03em0wIDkuNWMtMS4zOCAwLTIuNS0xLjEyLTIuNS0yLjVzMS4xMi0yLjUgMi41LTIuNSAyLjUgMS4xMiAyLjUgMi41LTEuMTIgMi41LTIuNSAyLjV6Ii8+PC9zdmc+",
-              size: { width: 32, height: 32 },
-            }}
           />
         ))}
         </Map>
@@ -165,9 +162,6 @@ export function PajuMap() {
                   {selectedLocationData.category}
                 </Badge>
               </div>
-              <p className="mt-1 text-xs text-muted-foreground">
-                {selectedLocationData.collected ? "방문 완료" : "아직 방문하지 않은 장소입니다"}
-              </p>
             </div>
             <button
               onClick={() => setSelectedLocation(null)}
@@ -176,29 +170,16 @@ export function PajuMap() {
               ✕
             </button>
           </div>
-          {!selectedLocationData.collected && (
-            <Button className="mt-2 w-full" size="sm">
-              <Navigation className="mr-2 h-4 w-4" />
-              길찾기
-            </Button>
-          )}
+          <Button className="mt-2 w-full" size="sm">
+            <Navigation className="mr-2 h-4 w-4" />
+            길찾기
+          </Button>
         </div>
       )}
 
       <Button size="icon" className="absolute bottom-20 right-3 z-20 h-11 w-11 rounded-full shadow-lg">
         <Navigation className="h-5 w-5" />
       </Button>
-
-      <div className="absolute right-3 top-14 z-20 rounded-lg border border-border bg-card/95 p-2 text-xs backdrop-blur-sm">
-        <div className="flex items-center gap-1.5">
-          <MapPin className="h-3.5 w-3.5 fill-primary text-primary" />
-          <span className="text-muted-foreground">방문 완료</span>
-        </div>
-        <div className="mt-1 flex items-center gap-1.5">
-          <MapPin className="h-3.5 w-3.5 fill-accent text-accent-foreground" />
-          <span className="text-muted-foreground">미방문</span>
-        </div>
-      </div>
     </div>
   )
 }

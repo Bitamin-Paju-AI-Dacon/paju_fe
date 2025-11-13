@@ -8,28 +8,61 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { BookOpen, ArrowLeft } from "lucide-react"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { BookOpen, ArrowLeft, AlertCircle, Loader2, CheckCircle2 } from "lucide-react"
 import Link from "next/link"
+import { signup, login } from "@/lib/auth-api"
 
 export default function SignupPage() {
   const router = useRouter()
-  const [name, setName] = useState("")
+  const [username, setUsername] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState(false)
 
-  const handleSignup = (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
+    setError(null)
 
+    // 비밀번호 확인
     if (password !== confirmPassword) {
-      alert("비밀번호가 일치하지 않습니다.")
+      setError("비밀번호가 일치하지 않습니다.")
       return
     }
 
-    localStorage.setItem("isLoggedIn", "true")
-    localStorage.setItem("userName", name)
-    localStorage.setItem("userEmail", email)
-    router.push("/")
+    // 비밀번호 길이 확인
+    if (password.length < 6) {
+      setError("비밀번호는 최소 6자 이상이어야 합니다.")
+      return
+    }
+
+    setIsLoading(true)
+
+    try {
+      // 회원가입
+      await signup({ username, email, password })
+      setSuccess(true)
+      
+      // 잠시 성공 메시지를 보여준 후 자동 로그인 시도
+      setTimeout(async () => {
+        try {
+          await login({ username, password })
+          localStorage.setItem("isLoggedIn", "true")
+          router.push("/")
+        } catch (loginErr) {
+          // 자동 로그인 실패 시 로그인 페이지로 이동
+          router.push("/login")
+        }
+      }, 1500)
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "회원가입에 실패했습니다."
+      setError(errorMessage)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -50,17 +83,34 @@ export default function SignupPage() {
           </div>
         </div>
 
+        {error && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+
+        {success && (
+          <Alert className="border-green-500 bg-green-50 text-green-900">
+            <CheckCircle2 className="h-4 w-4 text-green-600" />
+            <AlertDescription>회원가입이 완료되었습니다! 로그인 중...</AlertDescription>
+          </Alert>
+        )}
+
         <form onSubmit={handleSignup} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">이름</Label>
+            <Label htmlFor="username">사용자명</Label>
             <Input
-              id="name"
+              id="username"
               type="text"
-              placeholder="홍길동"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              placeholder="testuser"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              disabled={isLoading || success}
               required
+              minLength={1}
             />
+            <p className="text-xs text-muted-foreground">최소 1자 이상</p>
           </div>
 
           <div className="space-y-2">
@@ -71,6 +121,7 @@ export default function SignupPage() {
               placeholder="example@email.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              disabled={isLoading || success}
               required
             />
           </div>
@@ -83,9 +134,11 @@ export default function SignupPage() {
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              disabled={isLoading || success}
               required
-              minLength={8}
+              minLength={6}
             />
+            <p className="text-xs text-muted-foreground">최소 6자 이상</p>
           </div>
 
           <div className="space-y-2">
@@ -96,13 +149,26 @@ export default function SignupPage() {
               placeholder="••••••••"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
+              disabled={isLoading || success}
               required
-              minLength={8}
+              minLength={6}
             />
           </div>
 
-          <Button type="submit" className="w-full h-11" size="lg">
-            회원가입
+          <Button type="submit" className="w-full h-11" size="lg" disabled={isLoading || success}>
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                회원가입 중...
+              </>
+            ) : success ? (
+              <>
+                <CheckCircle2 className="mr-2 h-4 w-4" />
+                완료
+              </>
+            ) : (
+              "회원가입"
+            )}
           </Button>
         </form>
 
