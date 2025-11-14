@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils"
 import Link from "next/link"
 
 interface BottomNavProps {
-  currentPage?: "home" | "chatbot" | "profile"
+  currentPage?: "home" | "chatbot" | "profile" | "map"
 }
 
 export function BottomNav({ currentPage = "home" }: BottomNavProps) {
