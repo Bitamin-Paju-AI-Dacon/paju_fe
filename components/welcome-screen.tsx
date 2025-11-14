@@ -2,8 +2,9 @@
 
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { BookOpen, Sparkles, MapPin } from "lucide-react"
+import { BookOpen, Sparkles, MapPin, Camera } from "lucide-react"
 import { useRouter } from "next/navigation"
+import Image from "next/image"
 
 interface WelcomeScreenProps {
   onLogin: () => void
@@ -18,19 +19,34 @@ export function WelcomeScreen({ onLogin, onBrowse }: WelcomeScreenProps) {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-primary/20 to-background">
-      <div className="mx-auto w-full max-w-md px-4">
-        <Card className="w-full space-y-6 p-6 sm:p-8">
+    <div className="flex min-h-screen items-center justify-center">
+      <div className="mx-auto w-full max-w-md min-h-screen bg-gradient-to-b from-primary/20 to-background flex items-center justify-center px-4">
+        <Card className="w-full space-y-4 p-6 sm:p-8">
           <div className="text-center space-y-4">
-            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-primary/10">
-              <BookOpen className="h-10 w-10 text-primary" />
-            </div>
             <div className="space-y-2">
-              <h1 className="text-2xl sm:text-3xl font-bold text-balance">파주 북시티 탐험</h1>
-              <p className="text-sm text-muted-foreground text-balance">
-                책과 문화가 살아 숨쉬는 파주 출판단지를 탐험하고 스탬프를 모아보세요
-              </p>
+              <div className="flex justify-center">
+                <Image
+                  src="/logo3.png"
+                  alt="파주 북길 로고"
+                  width={240}
+                  height={72}
+                  className="h-auto object-contain"
+                  priority
+                />
+              </div>
             </div>
+          </div>
+
+          {/* 앱 스크린샷 이미지 */}
+          <div className="relative w-full max-w-[200px] mx-auto rounded-lg overflow-hidden border border-border -mt-6 -mb-3">
+            <Image
+              src="/scshot2.png"
+              alt="파주 북길 앱 화면"
+              width={200}
+              height={150}
+              className="w-full h-auto object-cover"
+              priority
+            />
           </div>
 
           <div className="space-y-4 pt-4">
@@ -38,15 +54,15 @@ export function WelcomeScreen({ onLogin, onBrowse }: WelcomeScreenProps) {
               <div className="flex items-start gap-3">
                 <Sparkles className="h-5 w-5 text-primary shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-medium text-sm">AR 스탬프 수집</p>
-                  <p className="text-xs text-muted-foreground">장소를 방문하고 사진으로 인증하세요</p>
+                  <p className="font-medium text-sm">스탬프 적립</p>
+                  <p className="text-xs text-muted-foreground">장소를 방문해 사진으로 인증하고 스탬프를 통해 보상을 받아보세요!</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
-                <MapPin className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                <Camera className="h-5 w-5 text-primary shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-medium text-sm">맞춤 코스 추천</p>
-                  <p className="text-xs text-muted-foreground">취향에 맞는 여행 코스를 추천받으세요</p>
+                  <p className="font-medium text-sm">파주 출판단지 챗봇</p>
+                  <p className="text-xs text-muted-foreground">파주 출판단지의 다양한 건축물과 장소를 챗봇에게 물어보세요!</p>
                 </div>
               </div>
             </div>
@@ -60,8 +76,6 @@ export function WelcomeScreen({ onLogin, onBrowse }: WelcomeScreenProps) {
               </Button>
             </div>
           </div>
-
-          <p className="text-center text-xs text-muted-foreground">로그인하면 스탬프 수집과 보상을 받을 수 있어요</p>
         </Card>
       </div>
     </div>

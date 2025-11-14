@@ -16,12 +16,15 @@ export interface ChatTextResponse {
 }
 
 export interface ChatImageResponse {
-  predicted_place: string;
-  description: string;
+  predicted_place?: string;
+  label?: string; // predicted_place의 별칭
+  description?: string;
+  answer?: string; // description의 별칭
   stamp_added?: boolean;
-  session_id: string;
+  session_id?: string;
   image_url?: string; // 로그인한 사용자의 경우 이미지 URL
   image_id?: number; // 로그인한 사용자의 경우 이미지 ID
+  confidence?: number;
 }
 
 export interface GreetingResponse {

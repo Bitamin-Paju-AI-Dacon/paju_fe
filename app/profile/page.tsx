@@ -6,12 +6,14 @@ import { AppHeader } from "@/components/app-header"
 
 export default function ProfilePage() {
   return (
-    <main className="min-h-screen bg-background pb-20">
-      <AppHeader />
-      <div className="mx-auto max-w-md">
-        <UserProfile />
+    <div className="flex min-h-screen">
+      <div className="mx-auto w-full max-w-md min-h-screen bg-gradient-to-b from-primary/20 to-background flex flex-col">
+        <AppHeader />
+        <main className="flex-1 pb-20">
+          <UserProfile />
+        </main>
+        <BottomNav currentPage="profile" />
       </div>
-      <BottomNav currentPage="profile" />
-    </main>
+    </div>
   )
 }

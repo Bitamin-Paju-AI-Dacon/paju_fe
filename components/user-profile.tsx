@@ -1,6 +1,6 @@
 "use client"
 
-import { User, Gift, Calendar, ImageIcon, LogOut, CheckCircle2, Trash2 } from "lucide-react"
+import { User, Gift, Calendar, ImageIcon, LogOut, CheckCircle2, Trash2, ChevronLeft, ChevronRight } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -21,6 +21,7 @@ import {
   type UserImage
 } from "@/lib/rewards-api"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import Image from "next/image"
 
 // 보상 정의
 const REWARDS = [
@@ -96,6 +97,7 @@ export function UserProfile() {
   const [userImages, setUserImages] = useState<UserImage[]>([])
   const [showSuccess, setShowSuccess] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [stampPage, setStampPage] = useState(0) // 스탬프 판 페이지 (0: 1-10, 1: 11-20, 2: 21-30)
 
   useEffect(() => {
     const userData = getUser()
@@ -117,6 +119,18 @@ export function UserProfile() {
         code: null,
       })))
       setIsLoading(false)
+    }
+
+    // 스탬프 적립 이벤트 리스너 추가
+    const handleStampCollected = () => {
+      if (isAuthenticated()) {
+        loadData()
+      }
+    }
+
+    window.addEventListener('stampCollected', handleStampCollected)
+    return () => {
+      window.removeEventListener('stampCollected', handleStampCollected)
     }
   }, [])
 
@@ -265,7 +279,7 @@ export function UserProfile() {
       <Card className="p-6">
         <div className="flex items-center gap-4">
           <Avatar className="h-20 w-20">
-            <AvatarImage src="/abstract-profile.png" alt="프로필" />
+            <AvatarImage src="/profile.png" alt="프로필" />
             <AvatarFallback>
               <User className="h-10 w-10" />
             </AvatarFallback>
@@ -299,6 +313,68 @@ export function UserProfile() {
                   ? `다음 보상(${nextRewardInfo.reward.name})까지 ${nextRewardInfo.remaining}개 남았어요!`
                   : "스탬프를 모아보세요!"}
           </p>
+        </div>
+      </Card>
+
+      {/* 스탬프 판 */}
+      <Card className="p-6">
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="font-semibold text-foreground">스탬프 판</h3>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => setStampPage(Math.max(0, stampPage - 1))}
+                disabled={stampPage === 0}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <span className="text-sm text-muted-foreground min-w-[60px] text-center">
+                {stampPage + 1} / 3
+              </span>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => setStampPage(Math.min(2, stampPage + 1))}
+                disabled={stampPage === 2}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-5 gap-3">
+            {Array.from({ length: 10 }).map((_, index) => {
+              const stampNumber = stampPage * 10 + index + 1
+              const isCollected = stampNumber <= stampCount
+              
+              return (
+                <div
+                  key={stampNumber}
+                  className={`aspect-square rounded-lg border-2 flex items-center justify-center transition-all ${
+                    isCollected
+                      ? 'border-primary bg-primary/10'
+                      : 'border-border bg-muted/30 opacity-50'
+                  }`}
+                >
+                  {isCollected ? (
+                    <Image
+                      src="/stamp.png"
+                      alt={`스탬프 ${stampNumber}`}
+                      width={60}
+                      height={60}
+                      className="object-contain"
+                    />
+                  ) : (
+                    <span className="text-xs text-muted-foreground">{stampNumber}</span>
+                  )}
+                </div>
+              )
+            })}
+          </div>
         </div>
       </Card>
 

@@ -51,7 +51,7 @@ export default function SignupPage() {
         try {
           await login({ username, password })
           localStorage.setItem("isLoggedIn", "true")
-          router.push("/")
+          router.push("/home")
         } catch (loginErr) {
           // 자동 로그인 실패 시 로그인 페이지로 이동
           router.push("/login")
@@ -66,8 +66,9 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-primary/20 to-background p-4">
-      <Card className="mx-auto w-full max-w-md space-y-6 p-8">
+    <div className="flex min-h-screen items-center justify-center">
+      <div className="mx-auto w-full max-w-md min-h-screen bg-gradient-to-b from-primary/20 to-background flex items-center justify-center p-4">
+        <Card className="w-full space-y-6 p-8">
         <Button variant="ghost" size="sm" className="mb-2" onClick={() => router.push("/")}>
           <ArrowLeft className="mr-2 h-4 w-4" />
           돌아가기
@@ -180,7 +181,8 @@ export default function SignupPage() {
             </Link>
           </p>
         </div>
-      </Card>
+        </Card>
+      </div>
     </div>
   )
 }

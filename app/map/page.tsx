@@ -4,7 +4,7 @@ import { AppHeader } from "@/components/app-header"
 
 export default function MapPage() {
   return (
-    <div className="mx-auto flex min-h-screen max-w-md flex-col bg-background">
+    <div className="mx-auto flex min-h-screen max-w-md flex-col bg-gradient-to-b from-primary/20 to-background">
       <AppHeader />
 
       <main className="flex-1 pb-20">

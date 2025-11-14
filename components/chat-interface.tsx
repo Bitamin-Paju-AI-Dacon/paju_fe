@@ -15,6 +15,7 @@ import {
   getStamps,
   type ChatImageResponse 
 } from "@/lib/chatbot-api"
+import { getUser, isAuthenticated } from "@/lib/auth-api"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 
 interface Message {
@@ -37,15 +38,31 @@ export function ChatInterface() {
   const [error, setError] = useState<string | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [imageAction, setImageAction] = useState<"description" | "stamp">("description") // 이미지 업로드 액션
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const imageInputRef = useRef<HTMLInputElement>(null)
+
+  // 사용자별 저장 키 생성
+  const getStorageKey = (sessionId: string): string => {
+    if (typeof window === 'undefined') return `chat_messages_${sessionId}`
+    
+    const user = getUser()
+    if (user && user.id) {
+      // 로그인한 사용자: 사용자 ID 포함
+      return `chat_messages_user_${user.id}_${sessionId}`
+    } else {
+      // 비로그인 사용자: 세션 ID만 사용
+      return `chat_messages_guest_${sessionId}`
+    }
+  }
 
   // localStorage에서 메시지 불러오기
   const loadMessagesFromStorage = (sessionId: string): Message[] => {
     if (typeof window === 'undefined') return []
     try {
-      const stored = localStorage.getItem(`chat_messages_${sessionId}`)
+      const storageKey = getStorageKey(sessionId)
+      const stored = localStorage.getItem(storageKey)
       if (stored) {
         const parsed = JSON.parse(stored)
         // imageData의 imageUrl이 base64인 경우 그대로 유지
@@ -64,8 +81,9 @@ export function ChatInterface() {
   const saveMessagesToStorage = (sessionId: string, messages: Message[]) => {
     if (typeof window === 'undefined') return
     try {
+      const storageKey = getStorageKey(sessionId)
       // imageData의 imageUrl이 base64인 경우 그대로 저장
-      localStorage.setItem(`chat_messages_${sessionId}`, JSON.stringify(messages))
+      localStorage.setItem(storageKey, JSON.stringify(messages))
     } catch (error) {
       console.error("Failed to save messages to storage:", error)
     }
@@ -74,17 +92,25 @@ export function ChatInterface() {
   // 세션 ID 초기화 및 메시지 불러오기
   useEffect(() => {
     const initializeChat = async () => {
+      const user = getUser()
+      const isLoggedIn = isAuthenticated()
+      
+      // 사용자별 세션 ID 키 생성
+      const sessionKey = isLoggedIn && user?.id 
+        ? `chatbot_session_id_user_${user.id}`
+        : "chatbot_session_id_guest"
+      
       // 세션 ID 설정
-      const storedSessionId = localStorage.getItem("chatbot_session_id")
+      const storedSessionId = localStorage.getItem(sessionKey)
       let currentSessionId: string
       
       if (storedSessionId) {
         currentSessionId = storedSessionId
-        setSessionId(storedSessionId)
+        setSessionId(currentSessionId)
       } else {
         currentSessionId = generateSessionId()
         setSessionId(currentSessionId)
-        localStorage.setItem("chatbot_session_id", currentSessionId)
+        localStorage.setItem(sessionKey, currentSessionId)
       }
 
       // 저장된 메시지 불러오기
@@ -192,12 +218,39 @@ export function ChatInterface() {
     try {
       // 이미지가 있으면 먼저 이미지 업로드
       if (hasImage && selectedFile) {
-        const imageResponse = await uploadImage(selectedFile, sessionId, 'stamp')
+        console.log("이미지 업로드 - action:", imageAction, "sessionId:", sessionId)
+        const imageResponse = await uploadImage(selectedFile, sessionId, imageAction)
+        console.log("이미지 업로드 응답:", imageResponse)
+        console.log("stamp_added 값:", imageResponse.stamp_added, "타입:", typeof imageResponse.stamp_added)
         
-        let botMessage = `📍 **장소**: ${imageResponse.predicted_place}\n\n${imageResponse.description}`
+        const placeName = imageResponse.predicted_place || imageResponse.label || "알 수 없는 장소"
+        const description = imageResponse.description || imageResponse.answer || ""
         
-        if (imageResponse.stamp_added) {
-          botMessage += "\n\n✅ 스탬프가 추가되었습니다!"
+        let botMessage = `📍 **장소**: ${placeName}`
+        if (description) {
+          botMessage += `\n\n${description}`
+        }
+        
+        // action이 "stamp"인 경우 스탬프 적립 메시지 표시
+        if (imageAction === "stamp") {
+          // stamp_added가 true인 경우 처리 (API 응답이 boolean 또는 다른 형태일 수 있음)
+          const stampAddedValue: any = imageResponse.stamp_added
+          const isStampAdded = stampAddedValue === true || stampAddedValue === "true" || stampAddedValue === 1 || String(stampAddedValue).toLowerCase() === "true"
+          
+          if (isStampAdded) {
+            botMessage += "\n\n✅ 스탬프가 추가되었습니다!"
+            
+            // 스탬프 적립 성공 시 이벤트 발생 (프로필/지도 페이지에서 감지)
+            if (typeof window !== 'undefined') {
+              window.dispatchEvent(new CustomEvent('stampCollected', {
+                detail: { place: placeName }
+              }))
+            }
+          } else {
+            // stamp_added가 false이거나 없는 경우에도 스탬프 적립 시도했다는 메시지 표시
+            console.warn("스탬프 적립 실패 - stamp_added:", imageResponse.stamp_added, "타입:", typeof imageResponse.stamp_added)
+            botMessage += "\n\n⚠️ 스탬프 적립을 시도했습니다."
+          }
         }
         
         // 텍스트도 있으면 텍스트 메시지도 전송
@@ -215,8 +268,8 @@ export function ChatInterface() {
         const imageUrl = imageResponse.image_url || imagePreview || ""
         
         addMessage("bot", botMessage, {
-          place: imageResponse.predicted_place,
-          confidence: 100,
+          place: placeName,
+          confidence: imageResponse.confidence || 100,
           imageUrl: imageUrl,
         })
       } else if (hasText) {
@@ -231,11 +284,12 @@ export function ChatInterface() {
     } finally {
       setIsLoading(false)
       // 전송 후 입력 필드 초기화
-      setInput("")
-      setImagePreview(null)
-      setSelectedFile(null)
-      if (fileInputRef.current) fileInputRef.current.value = ""
-      if (imageInputRef.current) imageInputRef.current.value = ""
+            setInput("")
+            setImagePreview(null)
+            setSelectedFile(null)
+            setImageAction("description") // 액션 초기화
+            if (fileInputRef.current) fileInputRef.current.value = ""
+            if (imageInputRef.current) imageInputRef.current.value = ""
     }
   }
 
@@ -243,6 +297,7 @@ export function ChatInterface() {
     const file = e.target.files?.[0]
     if (file) {
       setSelectedFile(file)
+      setImageAction("description") // 이미지 선택 시 기본값으로 초기화
       const reader = new FileReader()
       reader.onloadend = () => {
         setImagePreview(reader.result as string)
@@ -268,13 +323,22 @@ export function ChatInterface() {
       
       // 기존 세션의 메시지 삭제
       if (sessionId) {
-        localStorage.removeItem(`chat_messages_${sessionId}`)
+        const storageKey = getStorageKey(sessionId)
+        localStorage.removeItem(storageKey)
       }
+      
+      const user = getUser()
+      const isLoggedIn = isAuthenticated()
       
       // 새로운 세션 ID 생성
       const newSessionId = generateSessionId()
       setSessionId(newSessionId)
-      localStorage.setItem("chatbot_session_id", newSessionId)
+      
+      // 사용자별 세션 ID 키 생성
+      const sessionKey = isLoggedIn && user?.id 
+        ? `chatbot_session_id_user_${user.id}`
+        : "chatbot_session_id_guest"
+      localStorage.setItem(sessionKey, newSessionId)
       
       // 인삿말 다시 가져오기
       try {
@@ -435,9 +499,32 @@ export function ChatInterface() {
                 <X className="h-4 w-4" />
               </Button>
             </div>
-            <div className="flex-1">
-              <p className="text-xs text-muted-foreground mb-2">
-                이미지가 선택되었습니다. 텍스트를 입력하고 전송 버튼을 눌러주세요.
+            <div className="flex-1 space-y-2">
+              <p className="text-sm text-muted-foreground">
+                이미지가 선택되었습니다.
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  variant={imageAction === "description" ? "default" : "outline"}
+                  size="sm"
+                  className="flex-1 text-xs"
+                  onClick={() => setImageAction("description")}
+                  disabled={isLoading}
+                >
+                  장소 정보
+                </Button>
+                <Button
+                  variant={imageAction === "stamp" ? "default" : "outline"}
+                  size="sm"
+                  className="flex-1 text-xs"
+                  onClick={() => setImageAction("stamp")}
+                  disabled={isLoading}
+                >
+                  스탬프 적립
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                원하는 옵션을 선택하고 전송 버튼을 눌러주세요.
               </p>
             </div>
           </div>

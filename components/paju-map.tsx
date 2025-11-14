@@ -1,6 +1,6 @@
 "use client"
 
-import { MapPin, Navigation, Search } from "lucide-react"
+import { MapPin, Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
@@ -10,15 +10,15 @@ import { Map, MapMarker, useKakaoLoader } from "react-kakao-maps-sdk"
 // 파주 출판단지 관광지 목록 (좌표)
 const touristLocations = [
   { id: 1, name: "파주출판도시 Sbg파주사옥", lat: 37.7420, lng: 126.6920, category: "사옥" },
-  { id: 2, name: "milkbook", lat: 37.7410, lng: 126.6930, category: "서점" },
-  { id: 3, name: "김영사 사서점", lat: 37.7400, lng: 126.6940, category: "서점" },
-  { id: 4, name: "문학동네", lat: 37.7390, lng: 126.6950, category: "출판사" },
-  { id: 5, name: "출판단지 북카페눈", lat: 37.7380, lng: 126.6960, category: "카페" },
-  { id: 6, name: "열화당", lat: 37.7370, lng: 126.6970, category: "서점" },
-  { id: 7, name: "출판단지 은하수 출판사", lat: 37.7360, lng: 126.6980, category: "출판사" },
-  { id: 8, name: "출판단지 음악세계", lat: 37.7350, lng: 126.6990, category: "음악" },
-  { id: 9, name: "출판단지 지혜의숲", lat: 37.7435, lng: 126.6920, category: "서점" },
-  { id: 10, name: "출판단지 어린이집", lat: 37.7340, lng: 126.7000, category: "시설" },
+  { id: 2, name: "milkbook", lat: 37.707683, lng: 126.678721, category: "서점" },
+  { id: 3, name: "김영사 사서점", lat: 37.712296, lng: 126.686404, category: "서점" },
+  { id: 4, name: "문학동네", lat: 37.711471, lng: 126.688030, category: "출판사" },
+  { id: 5, name: "출판단지 북카페눈", lat: 37.707651, lng: 126.687237, category: "카페" },
+  { id: 6, name: "열화당", lat: 37.709045, lng: 126.684636, category: "서점" },
+  { id: 7, name: "출판단지 은하수 출판사", lat: 37.709656, lng: 126.687104, category: "출판사" },
+  { id: 8, name: "출판단지 음악세계", lat: 37.709936, lng: 126.685923, category: "음악" },
+  { id: 9, name: "출판단지 지혜의숲", lat: 37.708473, lng: 126.686944, category: "서점" },
+  { id: 10, name: "출판단지 어린이집", lat: 37.710973, lng: 126.684632, category: "시설" },
   { id: 11, name: "파인드아웃", lat: 37.7330, lng: 126.7010, category: "서점" },
 ]
 
@@ -137,7 +137,7 @@ export function PajuMap() {
 
       <div className="h-full w-full">
         <Map
-          center={{ lat: 37.7405, lng: 126.6948 }}
+          center={{ lat: 37.7095, lng: 126.6865 }}
           style={{ width: "100%", height: "100%" }}
           level={4}
           onCreate={() => console.log("카카오맵 생성 완료!")}
@@ -170,16 +170,8 @@ export function PajuMap() {
               ✕
             </button>
           </div>
-          <Button className="mt-2 w-full" size="sm">
-            <Navigation className="mr-2 h-4 w-4" />
-            길찾기
-          </Button>
         </div>
       )}
-
-      <Button size="icon" className="absolute bottom-20 right-3 z-20 h-11 w-11 rounded-full shadow-lg">
-        <Navigation className="h-5 w-5" />
-      </Button>
     </div>
   )
 }

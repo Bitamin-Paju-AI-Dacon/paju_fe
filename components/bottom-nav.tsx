@@ -10,7 +10,7 @@ interface BottomNavProps {
 
 export function BottomNav({ currentPage = "home" }: BottomNavProps) {
   const navItems = [
-    { icon: Home, label: "홈", href: "/", page: "home" as const },
+    { icon: Home, label: "홈", href: "/home", page: "home" as const },
     { icon: MessageCircle, label: "챗봇", href: "/chatbot", page: "chatbot" as const },
     { icon: User, label: "프로필", href: "/profile", page: "profile" as const },
   ]

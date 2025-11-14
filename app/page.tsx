@@ -1,59 +1,59 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { BottomNav } from "@/components/bottom-nav"
 import { WelcomeScreen } from "@/components/welcome-screen"
-import { TravelCalendar } from "@/components/travel-calendar"
-import { StampGallery } from "@/components/stamp-gallery"
-import { AppHeader } from "@/components/app-header"
+import { useRouter } from "next/navigation"
+import { useEffect } from "react"
+import { logout, getUser } from "@/lib/auth-api"
 
 export default function Home() {
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const router = useRouter()
 
-  // 로그인 상태 확인
+  // 루트 경로 접근 시 모든 로그인 정보 및 사용자 데이터 제거
   useEffect(() => {
-    const checkLoginStatus = () => {
-      const loginStatus = localStorage.getItem("isLoggedIn")
-      if (loginStatus === "true") {
-        setIsLoggedIn(true)
-      } else {
-        setIsLoggedIn(null)
+    // 먼저 사용자 정보 가져오기 (로그아웃 전에)
+    const user = getUser()
+    const userId = user?.id
+    
+    // 사용자별 채팅 기록 및 세션 ID 제거
+    if (userId) {
+      // 사용자별 채팅 기록 키 패턴으로 모든 키 찾아서 제거
+      const keysToRemove: string[] = []
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i)
+        if (key) {
+          // 사용자별 채팅 기록 제거
+          if (key.startsWith(`chat_messages_user_${userId}_`)) {
+            keysToRemove.push(key)
+          }
+          // 사용자별 세션 ID 제거
+          if (key === `chatbot_session_id_user_${userId}`) {
+            keysToRemove.push(key)
+          }
+        }
       }
-      setIsLoading(false)
+      keysToRemove.forEach(key => localStorage.removeItem(key))
     }
-
-    checkLoginStatus()
+    
+    // 게스트 세션 ID 제거
+    localStorage.removeItem("chatbot_session_id_guest")
+    localStorage.removeItem("chatbot_session_id")
+    
+    // 로그아웃 처리 (토큰, 사용자 정보 제거)
+    logout()
+    
+    // isLoggedIn 제거
+    localStorage.removeItem("isLoggedIn")
   }, [])
 
   const handleLogin = () => {
     localStorage.setItem("isLoggedIn", "true")
-    setIsLoggedIn(true)
+    router.push("/home")
   }
 
   const handleBrowse = () => {
     localStorage.setItem("isLoggedIn", "false")
-    setIsLoggedIn(false)
+    router.push("/home")
   }
 
-  // 로딩 중
-  if (isLoading) {
-    return null
-  }
-
-  // 로그인되지 않은 경우 welcome 화면
-  if (isLoggedIn !== true) {
-    return <WelcomeScreen onLogin={handleLogin} onBrowse={handleBrowse} />
-  }
-
-  return (
-    <main className="min-h-screen bg-background pb-20">
-      <AppHeader />
-      <div className="mx-auto max-w-md">
-        <TravelCalendar />
-        <StampGallery />
-      </div>
-      <BottomNav currentPage="home" />
-    </main>
-  )
+  return <WelcomeScreen onLogin={handleLogin} onBrowse={handleBrowse} />
 }

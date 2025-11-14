@@ -28,9 +28,9 @@ export default function LoginPage() {
     try {
       const response = await login({ username, password })
       
-      // 로그인 성공 시 메인 페이지로 이동 (토큰은 login 함수에서 자동 저장됨)
+      // 로그인 성공 시 홈 페이지로 이동 (토큰은 login 함수에서 자동 저장됨)
       localStorage.setItem("isLoggedIn", "true")
-      router.push("/")
+      router.push("/home")
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "로그인에 실패했습니다."
       setError(errorMessage)
@@ -40,8 +40,9 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-primary/20 to-background p-4">
-      <Card className="mx-auto w-full max-w-md space-y-6 p-8">
+    <div className="flex min-h-screen items-center justify-center">
+      <div className="mx-auto w-full max-w-md min-h-screen bg-gradient-to-b from-primary/20 to-background flex items-center justify-center p-4">
+        <Card className="w-full space-y-6 p-8">
         <Button variant="ghost" size="sm" className="mb-2" onClick={() => router.push("/")}>
           <ArrowLeft className="mr-2 h-4 w-4" />
           돌아가기
@@ -112,7 +113,8 @@ export default function LoginPage() {
             </Link>
           </p>
         </div>
-      </Card>
+        </Card>
+      </div>
     </div>
   )
 }
