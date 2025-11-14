@@ -384,7 +384,7 @@ export function ChatInterface() {
               />
             </Avatar>
             <div>
-              <h2 className="font-semibold">파주 북이</h2>
+              <h2 className="font-semibold">파랑이</h2>
               <p className="text-xs text-muted-foreground">
                 {isLoading ? "응답 중..." : "파주 출판단지 가이드"}
               </p>
