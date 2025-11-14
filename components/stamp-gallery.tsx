@@ -129,7 +129,6 @@ export function StampGallery() {
 
       {showMap ? (
         <div className="space-y-4">
-          <h3 className="font-semibold">수집한 장소 지도</h3>
           <Card className="overflow-hidden">
             <div className="h-[600px]">
               <PajuMap />
