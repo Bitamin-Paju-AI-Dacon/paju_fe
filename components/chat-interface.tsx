@@ -72,7 +72,7 @@ export function ChatInterface() {
         }))
       }
     } catch (error) {
-      console.error("Failed to load messages from storage:", error)
+      // Failed to load messages from storage
     }
     return []
   }
@@ -85,7 +85,7 @@ export function ChatInterface() {
       // imageData의 imageUrl이 base64인 경우 그대로 저장
       localStorage.setItem(storageKey, JSON.stringify(messages))
     } catch (error) {
-      console.error("Failed to save messages to storage:", error)
+      // Failed to save messages to storage
     }
   }
 
@@ -134,7 +134,6 @@ export function ChatInterface() {
           saveMessagesToStorage(currentSessionId, [greetingMessage])
         } catch (err) {
           // 인삿말 로드 실패 시 기본 메시지 사용
-          console.error("Failed to load greeting:", err)
           const defaultMessage: Message = {
             id: Date.now(),
             sender: "bot",
@@ -218,10 +217,7 @@ export function ChatInterface() {
     try {
       // 이미지가 있으면 먼저 이미지 업로드
       if (hasImage && selectedFile) {
-        console.log("이미지 업로드 - action:", imageAction, "sessionId:", sessionId)
         const imageResponse = await uploadImage(selectedFile, sessionId, imageAction)
-        console.log("이미지 업로드 응답:", imageResponse)
-        console.log("stamp_added 값:", imageResponse.stamp_added, "타입:", typeof imageResponse.stamp_added)
         
         const placeName = imageResponse.predicted_place || imageResponse.label || "알 수 없는 장소"
         const description = imageResponse.description || imageResponse.answer || ""
@@ -248,7 +244,6 @@ export function ChatInterface() {
             }
           } else {
             // stamp_added가 false이거나 없는 경우에도 스탬프 적립 시도했다는 메시지 표시
-            console.warn("스탬프 적립 실패 - stamp_added:", imageResponse.stamp_added, "타입:", typeof imageResponse.stamp_added)
             botMessage += "\n\n⚠️ 스탬프 적립을 시도했습니다."
           }
         }
@@ -259,7 +254,6 @@ export function ChatInterface() {
             const textResponse = await sendTextMessage(userMessage, sessionId)
             botMessage += `\n\n💬 **질문에 대한 답변**:\n${textResponse.response}`
           } catch (textErr) {
-            console.error("텍스트 메시지 전송 실패:", textErr)
             // 텍스트 전송 실패해도 이미지 응답은 표시
           }
         }

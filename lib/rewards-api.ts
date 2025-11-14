@@ -126,7 +126,6 @@ export async function getUserStamps(): Promise<UserStampsResponse> {
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error('Get user stamps error:', error);
     if (error instanceof Error) {
       throw error;
     }
@@ -160,7 +159,6 @@ export async function getAvailableRewards(): Promise<AvailableRewardsResponse> {
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error('Get available rewards error:', error);
     if (error instanceof Error) {
       throw error;
     }
@@ -195,7 +193,6 @@ export async function claimReward(rewardId: number): Promise<ClaimRewardResponse
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error('Claim reward error:', error);
     if (error instanceof Error) {
       throw error;
     }
@@ -229,7 +226,6 @@ export async function getClaimedRewards(): Promise<ClaimedRewardsResponse> {
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error('Get claimed rewards error:', error);
     if (error instanceof Error) {
       throw error;
     }
@@ -263,7 +259,6 @@ export async function getUserImages(): Promise<UserImagesResponse> {
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error('Get user images error:', error);
     if (error instanceof Error) {
       throw error;
     }
@@ -294,7 +289,6 @@ export async function deleteUserImage(imageId: number): Promise<void> {
       throw new Error(errorData.detail || '이미지를 삭제할 수 없습니다.');
     }
   } catch (error) {
-    console.error('Delete user image error:', error);
     if (error instanceof Error) {
       throw error;
     }

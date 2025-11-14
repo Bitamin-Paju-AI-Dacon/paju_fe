@@ -152,7 +152,6 @@ export function UserProfile() {
       setClaimedRewards(claimedData.claimed_rewards)
       setUserImages(imagesData.images)
     } catch (err) {
-      console.error("데이터 로드 실패:", err)
       setError(err instanceof Error ? err.message : "데이터를 불러오는 중 오류가 발생했습니다.")
     } finally {
       setIsLoading(false)

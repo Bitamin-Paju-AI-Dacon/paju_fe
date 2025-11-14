@@ -123,7 +123,6 @@ export async function signup(data: SignupRequest): Promise<User> {
 
     return responseData;
   } catch (error) {
-    console.error('Signup error:', error);
     if (error instanceof Error) {
       throw error;
     }
@@ -156,7 +155,6 @@ export async function login(data: LoginRequest): Promise<LoginResponse> {
 
     return responseData;
   } catch (error) {
-    console.error('Login error:', error);
     if (error instanceof Error) {
       throw error;
     }
@@ -199,7 +197,6 @@ export async function getCurrentUser(): Promise<User> {
 
     return responseData;
   } catch (error) {
-    console.error('Get current user error:', error);
     if (error instanceof Error) {
       throw error;
     }

@@ -72,7 +72,6 @@ export async function checkHealth(): Promise<boolean> {
     const data = await response.json();
     return data.status === 'healthy';
   } catch (error) {
-    console.error('Health check failed:', error);
     return false;
   }
 }
@@ -96,7 +95,6 @@ export async function getGreeting(): Promise<GreetingResponse> {
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error('Greeting error:', error);
     if (error instanceof Error && error.message.includes('Failed to fetch')) {
       throw new Error('서버에 연결할 수 없습니다. 서버가 실행 중인지 확인해주세요.');
     }
@@ -131,7 +129,6 @@ export async function sendTextMessage(
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error('Text message error:', error);
     if (error instanceof Error && error.message.includes('Failed to fetch')) {
       throw new Error('서버에 연결할 수 없습니다. 서버가 실행 중인지 확인해주세요.');
     }
@@ -182,7 +179,6 @@ export async function uploadImage(
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error('Image upload error:', error);
     if (error instanceof Error && error.message.includes('Failed to fetch')) {
       throw new Error('서버에 연결할 수 없습니다. 서버가 실행 중인지 확인해주세요.');
     }
@@ -213,7 +209,6 @@ export async function getStamps(sessionId: string): Promise<StampsResponse> {
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error('Get stamps error:', error);
     if (error instanceof Error && error.message.includes('Failed to fetch')) {
       throw new Error('서버에 연결할 수 없습니다. 서버가 실행 중인지 확인해주세요.');
     }
@@ -251,7 +246,6 @@ export async function searchEvents(
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error('Event search error:', error);
     if (error instanceof Error && error.message.includes('Failed to fetch')) {
       throw new Error('서버에 연결할 수 없습니다. 서버가 실행 중인지 확인해주세요.');
     }
@@ -278,11 +272,7 @@ export async function clearSession(sessionId: string): Promise<void> {
       const errorData = await response.json();
       throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
     }
-
-    const data = await response.json();
-    console.log(data.message);
   } catch (error) {
-    console.error('Clear session error:', error);
     if (error instanceof Error && error.message.includes('Failed to fetch')) {
       throw new Error('서버에 연결할 수 없습니다. 서버가 실행 중인지 확인해주세요.');
     }

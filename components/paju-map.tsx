@@ -31,26 +31,11 @@ export function PajuMap() {
 
   // 카카오맵 SDK 로드
   const apiKey = process.env.NEXT_PUBLIC_KAKAOMAP_KEY
-  console.log("🔑 카카오맵 API 키:", apiKey)
   
   const [loading, error] = useKakaoLoader({
     appkey: apiKey || "",
     libraries: ["services", "clusterer"],
   })
-
-  console.log("📍 카카오맵 로딩 상태:", { loading, error })
-  
-  // 에러 발생 시 더 자세한 정보 출력
-  if (error) {
-    console.error("❌ 카카오맵 로딩 실패!")
-    console.error("에러 타입:", error.type)
-    console.error("에러 타겟:", error.target)
-    console.log("💡 해결 방법:")
-    console.log("1. 카카오 개발자 콘솔 (https://developers.kakao.com) 접속")
-    console.log("2. 내 애플리케이션 > 앱 설정 > 플랫폼")
-    console.log("3. Web 플랫폼 추가 > http://localhost:3000 등록")
-    console.log("4. 브라우저 Network 탭에서 dapi.kakao.com 요청 확인")
-  }
 
   const filteredLocations = touristLocations.filter((loc) => {
     const matchesCategory = selectedCategory === "전체" || loc.category === selectedCategory
@@ -83,7 +68,6 @@ export function PajuMap() {
   }
 
   if (error) {
-    console.error("카카오맵 에러:", error)
     return (
       <div className="flex h-full w-full flex-col items-center justify-center gap-3 px-4">
         <p className="text-destructive font-semibold">지도를 불러오는데 실패했습니다</p>
@@ -103,8 +87,6 @@ export function PajuMap() {
       </div>
     )
   }
-
-  console.log("카카오맵 렌더링 시작")
 
   return (
     <div className="relative h-full w-full">
@@ -140,7 +122,7 @@ export function PajuMap() {
           center={{ lat: 37.7095, lng: 126.6865 }}
           style={{ width: "100%", height: "100%" }}
           level={4}
-          onCreate={() => console.log("카카오맵 생성 완료!")}
+          onCreate={() => {}}
         >
         {filteredLocations.map((location) => (
           <MapMarker
