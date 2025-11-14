@@ -3,7 +3,7 @@
  * FastAPI 서버와 통신하여 챗봇 기능을 제공합니다.
  */
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://parangee.store';
 
 export interface ChatTextRequest {
   message: string;

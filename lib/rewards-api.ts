@@ -3,7 +3,7 @@
  * 사용자별 스탬프 및 보상 관리
  */
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://parangee.store';
 
 // ===== Types =====
 

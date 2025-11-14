@@ -3,7 +3,7 @@
  * JWT 토큰 기반 인증 시스템
  */
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://parangee.store';
 
 // ===== Types =====
 
