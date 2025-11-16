@@ -10,7 +10,7 @@ import { Map, MapMarker, useKakaoLoader } from "react-kakao-maps-sdk"
 // 파주 출판단지 관광지 목록 (좌표)
 const touristLocations = [
   { id: 1, name: "파주출판도시 Sbg파주사옥", lat: 37.7420, lng: 126.6920, category: "사옥" },
-  { id: 2, name: "milkbook", lat: 37.707683, lng: 126.678721, category: "서점" },
+  { id: 2, name: "milkbook", lat: 37.707479, lng: 126.687637, category: "서점" },
   { id: 3, name: "김영사 사서점", lat: 37.712296, lng: 126.686404, category: "서점" },
   { id: 4, name: "문학동네", lat: 37.711471, lng: 126.688030, category: "출판사" },
   { id: 5, name: "출판단지 북카페눈", lat: 37.707651, lng: 126.687237, category: "카페" },
